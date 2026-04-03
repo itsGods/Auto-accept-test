@@ -1,22 +1,41 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: True Request Acceptor Bot API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: Dashboard statistics
+  - name: requests
+    description: Join request management
+  - name: users
+    description: User management
+  - name: broadcasts
+    description: Broadcast messages
+  - name: welcome
+    description: Welcome message templates
+  - name: settings
+    description: Bot settings
+  - name: admins
+    description: Admin user management
+  - name: channels
+    description: Channel management
+  - name: analytics
+    description: Analytics data
+  - name: auto-rules
+    description: Auto-approval rules
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +43,711 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get overall bot statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /requests:
+    get:
+      operationId: getJoinRequests
+      tags: [requests]
+      summary: List join requests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected, all]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Join requests list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinRequestsPage"
+
+  /requests/{id}/approve:
+    post:
+      operationId: approveRequest
+      tags: [requests]
+      summary: Approve a join request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /requests/{id}/reject:
+    post:
+      operationId: rejectRequest
+      tags: [requests]
+      summary: Reject a join request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectRequestBody"
+      responses:
+        "200":
+          description: Request rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /requests/approve-all:
+    post:
+      operationId: approveAllRequests
+      tags: [requests]
+      summary: Approve all pending requests
+      responses:
+        "200":
+          description: All approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkActionResult"
+
+  /requests/reject-all:
+    post:
+      operationId: rejectAllRequests
+      tags: [requests]
+      summary: Reject all pending requests
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectRequestBody"
+      responses:
+        "200":
+          description: All rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkActionResult"
+
+  /users:
+    get:
+      operationId: getUsers
+      tags: [users]
+      summary: List all users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: blacklisted
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsersPage"
+
+  /users/{id}:
+    get:
+      operationId: getUserById
+      tags: [users]
+      summary: Get user details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDetail"
+
+  /users/{id}/blacklist:
+    post:
+      operationId: blacklistUser
+      tags: [users]
+      summary: Blacklist a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlacklistBody"
+      responses:
+        "200":
+          description: User blacklisted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /users/{id}/unblacklist:
+    post:
+      operationId: unblacklistUser
+      tags: [users]
+      summary: Remove user from blacklist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User unblacklisted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /users/{id}/send-dm:
+    post:
+      operationId: sendDmToUser
+      tags: [users]
+      summary: Send a direct message to a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendDmBody"
+      responses:
+        "200":
+          description: DM sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /users/export:
+    get:
+      operationId: exportUsers
+      tags: [users]
+      summary: Export users as CSV data
+      responses:
+        "200":
+          description: Users CSV
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportResult"
+
+  /broadcasts:
+    get:
+      operationId: getBroadcasts
+      tags: [broadcasts]
+      summary: List broadcasts
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Broadcasts list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BroadcastsPage"
+    post:
+      operationId: createBroadcast
+      tags: [broadcasts]
+      summary: Create a broadcast
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBroadcastBody"
+      responses:
+        "201":
+          description: Broadcast created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Broadcast"
+
+  /broadcasts/{id}:
+    get:
+      operationId: getBroadcastById
+      tags: [broadcasts]
+      summary: Get broadcast details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Broadcast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Broadcast"
+    put:
+      operationId: updateBroadcast
+      tags: [broadcasts]
+      summary: Update a broadcast
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBroadcastBody"
+      responses:
+        "200":
+          description: Broadcast updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Broadcast"
+    delete:
+      operationId: deleteBroadcast
+      tags: [broadcasts]
+      summary: Delete a broadcast
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /broadcasts/{id}/send:
+    post:
+      operationId: sendBroadcast
+      tags: [broadcasts]
+      summary: Send a broadcast immediately
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Broadcast sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkActionResult"
+
+  /welcome-messages:
+    get:
+      operationId: getWelcomeMessages
+      tags: [welcome]
+      summary: List welcome message templates
+      responses:
+        "200":
+          description: Welcome messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WelcomeMessage"
+    post:
+      operationId: createWelcomeMessage
+      tags: [welcome]
+      summary: Create welcome message template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWelcomeMessageBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelcomeMessage"
+
+  /welcome-messages/{id}:
+    put:
+      operationId: updateWelcomeMessage
+      tags: [welcome]
+      summary: Update welcome message template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWelcomeMessageBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WelcomeMessage"
+    delete:
+      operationId: deleteWelcomeMessage
+      tags: [welcome]
+      summary: Delete welcome message template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /welcome-messages/{id}/activate:
+    post:
+      operationId: activateWelcomeMessage
+      tags: [welcome]
+      summary: Set as active welcome message
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get all bot settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotSettings"
+    put:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update bot settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSettingsBody"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotSettings"
+
+  /admins:
+    get:
+      operationId: getAdmins
+      tags: [admins]
+      summary: List admin users
+      responses:
+        "200":
+          description: Admin list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+    post:
+      operationId: addAdmin
+      tags: [admins]
+      summary: Add an admin user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddAdminBody"
+      responses:
+        "201":
+          description: Admin added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+
+  /admins/{id}:
+    put:
+      operationId: updateAdmin
+      tags: [admins]
+      summary: Update admin permissions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAdminBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+    delete:
+      operationId: removeAdmin
+      tags: [admins]
+      summary: Remove an admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /channels:
+    get:
+      operationId: getChannels
+      tags: [channels]
+      summary: List managed channels
+      responses:
+        "200":
+          description: Channels list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Channel"
+
+  /analytics/daily:
+    get:
+      operationId: getDailyAnalytics
+      tags: [analytics]
+      summary: Get daily analytics for the past N days
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 7
+      responses:
+        "200":
+          description: Daily analytics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DailyAnalytics"
+
+  /auto-rules:
+    get:
+      operationId: getAutoRules
+      tags: [auto-rules]
+      summary: List auto-approval rules
+      responses:
+        "200":
+          description: Rules list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AutoRule"
+    post:
+      operationId: createAutoRule
+      tags: [auto-rules]
+      summary: Create auto-approval rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAutoRuleBody"
+      responses:
+        "201":
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutoRule"
+
+  /auto-rules/{id}:
+    put:
+      operationId: updateAutoRule
+      tags: [auto-rules]
+      summary: Update auto-approval rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAutoRuleBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutoRule"
+    delete:
+      operationId: deleteAutoRule
+      tags: [auto-rules]
+      summary: Delete auto-approval rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionResult"
+
+  /bot/info:
+    get:
+      operationId: getBotInfo
+      tags: [settings]
+      summary: Get bot info from Telegram
+      responses:
+        "200":
+          description: Bot info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotInfo"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +755,558 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    DashboardStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalApproved:
+          type: integer
+        totalRejected:
+          type: integer
+        totalPending:
+          type: integer
+        todayRequests:
+          type: integer
+        todayApproved:
+          type: integer
+        broadcastsSent:
+          type: integer
+        blacklistedUsers:
+          type: integer
+        activeChannels:
+          type: integer
+        approvalRate:
+          type: number
+      required: [totalUsers, totalApproved, totalRejected, totalPending, todayRequests, todayApproved, broadcastsSent, blacklistedUsers, activeChannels, approvalRate]
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        userId:
+          type: integer
+        userDisplay:
+          type: string
+        channelTitle:
+          type: string
+        status:
+          type: string
+        timestamp:
+          type: string
+      required: [id, type, userDisplay, timestamp]
+
+    JoinRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        channelId:
+          type: integer
+        channelTitle:
+          type: string
+        channelUsername:
+          type: string
+        status:
+          type: string
+        requestedAt:
+          type: string
+        processedAt:
+          type: string
+          nullable: true
+        rejectionReason:
+          type: string
+          nullable: true
+        userMessage:
+          type: string
+          nullable: true
+        autoProcessed:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/User"
+      required: [id, userId, channelId, status, requestedAt, autoProcessed]
+
+    JoinRequestsPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/JoinRequest"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required: [items, total, page, limit, totalPages]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        telegramId:
+          type: integer
+        username:
+          type: string
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        isBlacklisted:
+          type: boolean
+        isPremium:
+          type: boolean
+        requestCount:
+          type: integer
+        joinedAt:
+          type: string
+        lastSeenAt:
+          type: string
+      required: [id, telegramId, isBlacklisted, isPremium, requestCount, joinedAt, lastSeenAt]
+
+    UserDetail:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        requests:
+          type: array
+          items:
+            $ref: "#/components/schemas/JoinRequest"
+      required: [user, requests]
+
+    UsersPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required: [items, total, page, limit, totalPages]
+
+    WelcomeMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        isActive:
+          type: boolean
+        messageText:
+          type: string
+        parseMode:
+          type: string
+        photoUrl:
+          type: string
+          nullable: true
+        photoFileId:
+          type: string
+          nullable: true
+        hasInlineButtons:
+          type: boolean
+        inlineButtons:
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, name, isActive, messageText, parseMode, hasInlineButtons, createdAt, updatedAt]
+
+    CreateWelcomeMessageBody:
+      type: object
+      properties:
+        name:
+          type: string
+        messageText:
+          type: string
+        parseMode:
+          type: string
+        photoUrl:
+          type: string
+          nullable: true
+        photoFileId:
+          type: string
+          nullable: true
+        hasInlineButtons:
+          type: boolean
+        inlineButtons:
+          nullable: true
+      required: [name, messageText]
+
+    Broadcast:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        messageText:
+          type: string
+        parseMode:
+          type: string
+        photoUrl:
+          type: string
+          nullable: true
+        caption:
+          type: string
+          nullable: true
+        hasInlineButtons:
+          type: boolean
+        inlineButtons:
+          nullable: true
+        status:
+          type: string
+        scheduledAt:
+          type: string
+          nullable: true
+        sentAt:
+          type: string
+          nullable: true
+        totalRecipients:
+          type: integer
+        successCount:
+          type: integer
+        failCount:
+          type: integer
+        targetFilter:
+          type: string
+        createdAt:
+          type: string
+      required: [id, title, messageText, parseMode, hasInlineButtons, status, totalRecipients, successCount, failCount, targetFilter, createdAt]
+
+    CreateBroadcastBody:
+      type: object
+      properties:
+        title:
+          type: string
+        messageText:
+          type: string
+        parseMode:
+          type: string
+        photoUrl:
+          type: string
+          nullable: true
+        caption:
+          type: string
+          nullable: true
+        hasInlineButtons:
+          type: boolean
+        inlineButtons:
+          nullable: true
+        scheduledAt:
+          type: string
+          nullable: true
+        targetFilter:
+          type: string
+      required: [title, messageText]
+
+    BroadcastsPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Broadcast"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+      required: [items, total, page, totalPages]
+
+    BotSettings:
+      type: object
+      properties:
+        welcomeEnabled:
+          type: boolean
+        autoApproveEnabled:
+          type: boolean
+        autoRejectEnabled:
+          type: boolean
+        cooldownSeconds:
+          type: integer
+        maxRequestsPerUser:
+          type: integer
+        notifyAdminOnRequest:
+          type: boolean
+        notifyAdminOnApproval:
+          type: boolean
+        requireChannelMembership:
+          type: boolean
+        botLanguage:
+          type: string
+        maintenanceMode:
+          type: boolean
+        customStartMessage:
+          type: string
+        customHelpMessage:
+          type: string
+        antiSpamEnabled:
+          type: boolean
+        deepLinkEnabled:
+          type: boolean
+      required: [welcomeEnabled, autoApproveEnabled, autoRejectEnabled, cooldownSeconds, maxRequestsPerUser, notifyAdminOnRequest, notifyAdminOnApproval, requireChannelMembership, botLanguage, maintenanceMode, antiSpamEnabled, deepLinkEnabled]
+
+    UpdateSettingsBody:
+      type: object
+      properties:
+        welcomeEnabled:
+          type: boolean
+        autoApproveEnabled:
+          type: boolean
+        autoRejectEnabled:
+          type: boolean
+        cooldownSeconds:
+          type: integer
+        maxRequestsPerUser:
+          type: integer
+        notifyAdminOnRequest:
+          type: boolean
+        notifyAdminOnApproval:
+          type: boolean
+        requireChannelMembership:
+          type: boolean
+        botLanguage:
+          type: string
+        maintenanceMode:
+          type: boolean
+        customStartMessage:
+          type: string
+        customHelpMessage:
+          type: string
+        antiSpamEnabled:
+          type: boolean
+        deepLinkEnabled:
+          type: boolean
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        telegramId:
+          type: integer
+        username:
+          type: string
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        role:
+          type: string
+        canApprove:
+          type: boolean
+        canBroadcast:
+          type: boolean
+        canManageAdmins:
+          type: boolean
+        canManageSettings:
+          type: boolean
+        addedAt:
+          type: string
+      required: [id, telegramId, role, canApprove, canBroadcast, canManageAdmins, canManageSettings, addedAt]
+
+    AddAdminBody:
+      type: object
+      properties:
+        telegramId:
+          type: integer
+        username:
+          type: string
+        firstName:
+          type: string
+        role:
+          type: string
+        canApprove:
+          type: boolean
+        canBroadcast:
+          type: boolean
+        canManageAdmins:
+          type: boolean
+        canManageSettings:
+          type: boolean
+      required: [telegramId]
+
+    UpdateAdminBody:
+      type: object
+      properties:
+        role:
+          type: string
+        canApprove:
+          type: boolean
+        canBroadcast:
+          type: boolean
+        canManageAdmins:
+          type: boolean
+        canManageSettings:
+          type: boolean
+
+    Channel:
+      type: object
+      properties:
+        id:
+          type: integer
+        channelId:
+          type: integer
+        title:
+          type: string
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        requireApproval:
+          type: boolean
+        autoApproveEnabled:
+          type: boolean
+        cooldownSeconds:
+          type: integer
+        joinedAt:
+          type: string
+      required: [id, channelId, isActive, requireApproval, autoApproveEnabled, cooldownSeconds, joinedAt]
+
+    DailyAnalytics:
+      type: object
+      properties:
+        date:
+          type: string
+        totalRequests:
+          type: integer
+        approved:
+          type: integer
+        rejected:
+          type: integer
+        newUsers:
+          type: integer
+      required: [date, totalRequests, approved, rejected, newUsers]
+
+    AutoRule:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        isActive:
+          type: boolean
+        ruleType:
+          type: string
+        pattern:
+          type: string
+        action:
+          type: string
+        priority:
+          type: integer
+        createdAt:
+          type: string
+      required: [id, name, isActive, ruleType, pattern, action, priority, createdAt]
+
+    CreateAutoRuleBody:
+      type: object
+      properties:
+        name:
+          type: string
+        isActive:
+          type: boolean
+        ruleType:
+          type: string
+        pattern:
+          type: string
+        action:
+          type: string
+        priority:
+          type: integer
+      required: [name, ruleType, pattern, action]
+
+    ActionResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success, message]
+
+    BulkActionResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        processed:
+          type: integer
+        message:
+          type: string
+      required: [success, processed, message]
+
+    RejectRequestBody:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    BlacklistBody:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    SendDmBody:
+      type: object
+      properties:
+        message:
+          type: string
+        parseMode:
+          type: string
+        photoUrl:
+          type: string
+          nullable: true
+      required: [message]
+
+    ExportResult:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+      required: [data, total]
+
+    BotInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        username:
+          type: string
+        isOnline:
+          type: boolean
+      required: [id, firstName, username, isOnline]
