@@ -29,6 +29,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  InlineButtonBuilder,
+  type InlineButtonGrid,
+} from "@/components/ui/inline-button-builder";
 
 type WelcomeMsg = {
   id: number;
@@ -38,6 +42,7 @@ type WelcomeMsg = {
   parseMode?: string | null;
   photoUrl?: string | null;
   hasInlineButtons?: boolean | null;
+  inlineButtons?: InlineButtonGrid | null;
 };
 
 export default function Welcome() {
@@ -45,7 +50,13 @@ export default function Welcome() {
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState(false);
   const [editTarget, setEditTarget] = useState<WelcomeMsg | null>(null);
-  const [form, setForm] = useState({ name: "", messageText: "", parseMode: "Markdown", photoUrl: "" });
+  const [form, setForm] = useState({
+    name: "",
+    messageText: "",
+    parseMode: "Markdown",
+    photoUrl: "",
+    buttons: [] as InlineButtonGrid,
+  });
 
   const { data: messages, isLoading } = useGetWelcomeMessages();
 
@@ -81,13 +92,19 @@ export default function Welcome() {
 
   const openCreate = () => {
     setEditTarget(null);
-    setForm({ name: "", messageText: "", parseMode: "Markdown", photoUrl: "" });
+    setForm({ name: "", messageText: "*Welcome!* Thank you for your interest.", parseMode: "Markdown", photoUrl: "", buttons: [] });
     setDialog(true);
   };
 
   const openEdit = (msg: WelcomeMsg) => {
     setEditTarget(msg);
-    setForm({ name: msg.name, messageText: msg.messageText, parseMode: msg.parseMode ?? "Markdown", photoUrl: msg.photoUrl ?? "" });
+    setForm({
+      name: msg.name,
+      messageText: msg.messageText,
+      parseMode: msg.parseMode ?? "Markdown",
+      photoUrl: msg.photoUrl ?? "",
+      buttons: (msg.inlineButtons as InlineButtonGrid) ?? [],
+    });
     setDialog(true);
   };
 
@@ -99,12 +116,11 @@ export default function Welcome() {
       messageText: form.messageText,
       parseMode: form.parseMode,
       photoUrl: form.photoUrl || undefined,
+      hasInlineButtons: form.buttons.length > 0,
+      inlineButtons: form.buttons.length > 0 ? form.buttons : null,
     };
-    if (editTarget) {
-      update({ id: editTarget.id, data: payload });
-    } else {
-      create({ data: payload });
-    }
+    if (editTarget) update({ id: editTarget.id, data: payload });
+    else create({ data: payload });
   };
 
   return (
@@ -112,7 +128,7 @@ export default function Welcome() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Welcome Messages</h1>
-          <p className="text-muted-foreground mt-1">Custom messages sent to users when they start the bot</p>
+          <p className="text-muted-foreground mt-1">Sent when users type /start — supports Markdown, images, and inline buttons</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="w-4 h-4 mr-1" />
@@ -153,7 +169,7 @@ export default function Welcome() {
                     >
                       {msg.isActive ? <Star className="w-4 h-4" /> : <StarOff className="w-4 h-4" />}
                     </Button>
-                    <Button size="sm" variant="ghost" className="text-primary hover:bg-primary/10" onClick={() => openEdit(msg)}>
+                    <Button size="sm" variant="ghost" className="text-primary hover:bg-primary/10" onClick={() => openEdit(msg as WelcomeMsg)}>
                       <Edit2 className="w-4 h-4" />
                     </Button>
                     <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-500/10" onClick={() => remove({ id: msg.id })}>
@@ -166,11 +182,28 @@ export default function Welcome() {
                 <div className="bg-muted/30 rounded p-3 border border-border/50">
                   <pre className="text-sm text-foreground whitespace-pre-wrap font-mono">{msg.messageText}</pre>
                 </div>
-                <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+                <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
                   <span>Mode: {msg.parseMode}</span>
                   {msg.photoUrl && <span>&bull; Has image</span>}
-                  {msg.hasInlineButtons && <span>&bull; Has buttons</span>}
+                  {msg.hasInlineButtons && (
+                    <span className="text-primary">
+                      &bull; {(msg.inlineButtons as InlineButtonGrid | null)?.flat().length ?? 0} button(s)
+                    </span>
+                  )}
                 </div>
+                {msg.hasInlineButtons && msg.inlineButtons && (
+                  <div className="mt-2 space-y-1">
+                    {(msg.inlineButtons as InlineButtonGrid).map((row: { text: string; url: string }[], i: number) => (
+                      <div key={i} className="flex gap-1">
+                        {row.map((btn, j: number) => (
+                          <div key={j} className="text-xs bg-primary/10 text-primary border border-primary/20 rounded px-2 py-1">
+                            {btn.text}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -178,24 +211,19 @@ export default function Welcome() {
       )}
 
       <Dialog open={dialog} onOpenChange={closeDialog}>
-        <DialogContent className="bg-card border-border max-w-lg">
+        <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editTarget ? "Edit Welcome Message" : "New Welcome Message"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>Template Name</Label>
-              <Input
-                placeholder="e.g. Main Welcome"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="mt-1"
-              />
+              <Input placeholder="e.g. Main Welcome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1" />
             </div>
             <div>
               <Label>Message Text</Label>
               <Textarea
-                placeholder="Welcome message text..."
+                placeholder="Welcome message text...&#10;&#10;Use *bold*, _italic_, `code`, [link](url)"
                 value={form.messageText}
                 onChange={(e) => setForm({ ...form, messageText: e.target.value })}
                 className="mt-1 min-h-[140px] font-mono text-sm"
@@ -204,9 +232,7 @@ export default function Welcome() {
             <div>
               <Label>Parse Mode</Label>
               <Select value={form.parseMode} onValueChange={(v) => setForm({ ...form, parseMode: v })}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Markdown">Markdown</SelectItem>
                   <SelectItem value="HTML">HTML</SelectItem>
@@ -215,16 +241,12 @@ export default function Welcome() {
               </Select>
             </div>
             <div>
-              <Label>Photo URL (optional)</Label>
-              <Input
-                placeholder="https://example.com/image.jpg"
-                value={form.photoUrl}
-                onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
-                className="mt-1"
-              />
+              <Label>Image URL (optional)</Label>
+              <Input placeholder="https://example.com/image.jpg" value={form.photoUrl} onChange={(e) => setForm({ ...form, photoUrl: e.target.value })} className="mt-1" />
             </div>
+            <InlineButtonBuilder value={form.buttons} onChange={(buttons) => setForm({ ...form, buttons })} />
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-2">
             <Button variant="ghost" onClick={closeDialog}>Cancel</Button>
             <Button onClick={handleSubmit} disabled={creating || updating || !form.name || !form.messageText}>
               {editTarget ? "Update" : "Create"}

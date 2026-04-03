@@ -9,6 +9,7 @@ import Requests from "@/pages/requests";
 import Users from "@/pages/users";
 import Broadcasts from "@/pages/broadcasts";
 import Welcome from "@/pages/welcome";
+import Messages from "@/pages/messages";
 import Admins from "@/pages/admins";
 import Settings from "@/pages/settings";
 import Analytics from "@/pages/analytics";
@@ -36,6 +37,7 @@ function Router() {
         <Route path="/users" component={Users} />
         <Route path="/broadcasts" component={Broadcasts} />
         <Route path="/welcome" component={Welcome} />
+        <Route path="/messages" component={Messages} />
         <Route path="/admins" component={Admins} />
         <Route path="/settings" component={Settings} />
         <Route path="/analytics" component={Analytics} />

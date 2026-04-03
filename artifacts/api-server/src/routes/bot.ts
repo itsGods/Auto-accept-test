@@ -1127,6 +1127,159 @@ router.delete("/auto-rules/:id", async (req, res) => {
   }
 });
 
+// ─── Approval Messages ────────────────────────────────────────────────────────
+
+router.get("/approval-messages", async (req, res) => {
+  try {
+    const msgs = await db
+      .select()
+      .from(approvalMessagesTable)
+      .orderBy(desc(approvalMessagesTable.createdAt));
+    res.json(msgs.map((m) => ({ ...m, createdAt: m.createdAt?.toISOString() })));
+  } catch (err) {
+    req.log.error({ err }, "Failed to get approval messages");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/approval-messages", async (req, res) => {
+  try {
+    const body = req.body as {
+      name: string;
+      messageText: string;
+      parseMode?: string;
+      photoUrl?: string;
+      hasInlineButtons?: boolean;
+      inlineButtons?: unknown;
+    };
+    const [created] = await db
+      .insert(approvalMessagesTable)
+      .values({
+        name: body.name,
+        messageText: body.messageText,
+        parseMode: body.parseMode ?? "Markdown",
+        photoUrl: body.photoUrl,
+        hasInlineButtons: body.hasInlineButtons ?? false,
+        inlineButtons: body.inlineButtons ?? null,
+      })
+      .returning();
+    res.status(201).json({ ...created, createdAt: created.createdAt?.toISOString() });
+  } catch (err) {
+    req.log.error({ err }, "Failed to create approval message");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.put("/approval-messages/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const body = req.body;
+    const [updated] = await db
+      .update(approvalMessagesTable)
+      .set(body)
+      .where(eq(approvalMessagesTable.id, id))
+      .returning();
+    res.json({ ...updated, createdAt: updated.createdAt?.toISOString() });
+  } catch (err) {
+    req.log.error({ err }, "Failed to update approval message");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/approval-messages/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await db.delete(approvalMessagesTable).where(eq(approvalMessagesTable.id, id));
+    res.json({ success: true, message: "Deleted" });
+  } catch (err) {
+    req.log.error({ err }, "Failed to delete approval message");
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+router.post("/approval-messages/:id/activate", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await db.update(approvalMessagesTable).set({ isActive: false });
+    await db.update(approvalMessagesTable).set({ isActive: true }).where(eq(approvalMessagesTable.id, id));
+    res.json({ success: true, message: "Approval message activated" });
+  } catch (err) {
+    req.log.error({ err }, "Failed to activate approval message");
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+// ─── Rejection Messages ───────────────────────────────────────────────────────
+
+router.get("/rejection-messages", async (req, res) => {
+  try {
+    const msgs = await db
+      .select()
+      .from(rejectionMessagesTable)
+      .orderBy(desc(rejectionMessagesTable.createdAt));
+    res.json(msgs.map((m) => ({ ...m, createdAt: m.createdAt?.toISOString() })));
+  } catch (err) {
+    req.log.error({ err }, "Failed to get rejection messages");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/rejection-messages", async (req, res) => {
+  try {
+    const body = req.body as { name: string; messageText: string; parseMode?: string };
+    const [created] = await db
+      .insert(rejectionMessagesTable)
+      .values({
+        name: body.name,
+        messageText: body.messageText,
+        parseMode: body.parseMode ?? "Markdown",
+      })
+      .returning();
+    res.status(201).json({ ...created, createdAt: created.createdAt?.toISOString() });
+  } catch (err) {
+    req.log.error({ err }, "Failed to create rejection message");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.put("/rejection-messages/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const [updated] = await db
+      .update(rejectionMessagesTable)
+      .set(req.body)
+      .where(eq(rejectionMessagesTable.id, id))
+      .returning();
+    res.json({ ...updated, createdAt: updated.createdAt?.toISOString() });
+  } catch (err) {
+    req.log.error({ err }, "Failed to update rejection message");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/rejection-messages/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await db.delete(rejectionMessagesTable).where(eq(rejectionMessagesTable.id, id));
+    res.json({ success: true, message: "Deleted" });
+  } catch (err) {
+    req.log.error({ err }, "Failed to delete rejection message");
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+router.post("/rejection-messages/:id/activate", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await db.update(rejectionMessagesTable).set({ isActive: false });
+    await db.update(rejectionMessagesTable).set({ isActive: true }).where(eq(rejectionMessagesTable.id, id));
+    res.json({ success: true, message: "Rejection message activated" });
+  } catch (err) {
+    req.log.error({ err }, "Failed to activate rejection message");
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
 // ─── Bot Info ─────────────────────────────────────────────────────────────────
 
 router.get("/bot/info", async (req, res) => {

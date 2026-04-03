@@ -29,11 +29,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  InlineButtonBuilder,
+  type InlineButtonGrid,
+} from "@/components/ui/inline-button-builder";
 
 export default function Broadcasts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [createDialog, setCreateDialog] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -42,6 +46,7 @@ export default function Broadcasts() {
     photoUrl: "",
     caption: "",
     targetFilter: "all",
+    buttons: [] as InlineButtonGrid,
   });
 
   const { data, isLoading } = useGetBroadcasts(
@@ -72,7 +77,8 @@ export default function Broadcasts() {
     },
   });
 
-  const resetForm = () => setForm({ title: "", messageText: "", parseMode: "Markdown", photoUrl: "", caption: "", targetFilter: "all" });
+  const resetForm = () =>
+    setForm({ title: "", messageText: "", parseMode: "Markdown", photoUrl: "", caption: "", targetFilter: "all", buttons: [] });
 
   const handleCreate = () => {
     create({
@@ -83,6 +89,8 @@ export default function Broadcasts() {
         photoUrl: form.photoUrl || undefined,
         caption: form.caption || undefined,
         targetFilter: form.targetFilter,
+        hasInlineButtons: form.buttons.length > 0,
+        inlineButtons: form.buttons.length > 0 ? form.buttons : undefined,
       },
     });
   };
@@ -154,6 +162,9 @@ export default function Broadcasts() {
                             {b.failCount > 0 && <span className="text-red-400">{b.failCount} failed</span>}
                           </>
                         )}
+                        {b.hasInlineButtons && (
+                          <span className="text-primary">&bull; Has buttons</span>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-1 ml-4">
@@ -188,33 +199,26 @@ export default function Broadcasts() {
 
       {/* Create Dialog */}
       <Dialog open={createDialog} onOpenChange={setCreateDialog}>
-        <DialogContent className="bg-card border-border max-w-lg">
+        <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>New Broadcast</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>Title</Label>
-              <Input
-                placeholder="Broadcast title..."
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="mt-1"
-              />
+              <Input placeholder="Broadcast title..." value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="mt-1" />
             </div>
             <div>
               <Label>Message</Label>
               <Textarea
-                placeholder="Your message (Markdown supported)..."
+                placeholder="Your message (Markdown supported)&#10;&#10;Use *bold*, _italic_, `code`, [link](url)"
                 value={form.messageText}
                 onChange={(e) => setForm({ ...form, messageText: e.target.value })}
-                className="mt-1 min-h-[120px]"
+                className="mt-1 min-h-[120px] font-mono text-sm"
               />
             </div>
             <div>
               <Label>Parse Mode</Label>
               <Select value={form.parseMode} onValueChange={(v) => setForm({ ...form, parseMode: v })}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Markdown">Markdown</SelectItem>
                   <SelectItem value="HTML">HTML</SelectItem>
@@ -224,26 +228,17 @@ export default function Broadcasts() {
             </div>
             <div>
               <Label>Photo URL (optional)</Label>
-              <Input
-                placeholder="https://example.com/image.jpg"
-                value={form.photoUrl}
-                onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
-                className="mt-1"
-              />
+              <Input placeholder="https://example.com/image.jpg" value={form.photoUrl} onChange={(e) => setForm({ ...form, photoUrl: e.target.value })} className="mt-1" />
             </div>
             {form.photoUrl && (
               <div>
                 <Label>Caption (optional)</Label>
-                <Input
-                  placeholder="Caption for the image..."
-                  value={form.caption}
-                  onChange={(e) => setForm({ ...form, caption: e.target.value })}
-                  className="mt-1"
-                />
+                <Input placeholder="Caption for the image..." value={form.caption} onChange={(e) => setForm({ ...form, caption: e.target.value })} className="mt-1" />
               </div>
             )}
+            <InlineButtonBuilder value={form.buttons} onChange={(buttons) => setForm({ ...form, buttons })} />
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-2">
             <Button variant="ghost" onClick={() => { setCreateDialog(false); resetForm(); }}>Cancel</Button>
             <Button onClick={handleCreate} disabled={creating || !form.title || !form.messageText}>
               Create Broadcast

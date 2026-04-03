@@ -732,6 +732,29 @@ bot.command("settings", async (ctx) => {
   );
 });
 
+// ─── /panel command (admin) ────────────────────────────────────────────────────
+
+bot.command("panel", async (ctx) => {
+  if (!(await isAdmin(ctx.from?.id ?? 0))) {
+    await ctx.reply("You are not authorized to access the admin panel.");
+    return;
+  }
+
+  const panelUrl = process.env.REPLIT_DEV_DOMAIN
+    ? `https://${process.env.REPLIT_DEV_DOMAIN}/`
+    : process.env.PANEL_URL ?? "https://your-panel-url.replit.app/";
+
+  await ctx.reply(
+    `*Admin Panel Access*\n\nClick the button below to open the True Request Acceptor admin panel.`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: Markup.inlineKeyboard([
+        [Markup.button.url("Open Admin Panel", panelUrl)],
+      ]).reply_markup,
+    }
+  );
+});
+
 // ─── /deeplink command ─────────────────────────────────────────────────────────
 
 bot.command("deeplink", async (ctx) => {
