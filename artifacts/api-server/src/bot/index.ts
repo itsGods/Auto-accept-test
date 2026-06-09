@@ -15,6 +15,8 @@ import {
 } from "@workspace/db";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { broadcastMessage as _broadcastMessage } from "./broadcast-utils";
+import { registerAdminMenu } from "./admin-menu";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 if (!BOT_TOKEN) {
@@ -1000,6 +1002,9 @@ export function stopBot() {
   }
 }
 
+// Register inline admin menu (must be before bot.launch)
+registerAdminMenu(bot);
+
 export async function broadcastMessage(
   userIds: number[],
   message: string,
@@ -1008,48 +1013,5 @@ export async function broadcastMessage(
   caption?: string,
   inlineButtons?: { text: string; url: string }[][]
 ) {
-  let success = 0;
-  let fail = 0;
-
-  for (const userId of userIds) {
-    try {
-      if (photoUrl) {
-        if (inlineButtons && inlineButtons.length > 0) {
-          await bot.telegram.sendPhoto(userId, photoUrl, {
-            caption: caption || message,
-            parse_mode: parseMode,
-            reply_markup: Markup.inlineKeyboard(
-              inlineButtons.map((row) =>
-                row.map((btn) => Markup.button.url(btn.text, btn.url))
-              )
-            ).reply_markup,
-          });
-        } else {
-          await bot.telegram.sendPhoto(userId, photoUrl, {
-            caption: caption || message,
-            parse_mode: parseMode,
-          });
-        }
-      } else if (inlineButtons && inlineButtons.length > 0) {
-        await bot.telegram.sendMessage(userId, message, {
-          parse_mode: parseMode,
-          reply_markup: Markup.inlineKeyboard(
-            inlineButtons.map((row) =>
-              row.map((btn) => Markup.button.url(btn.text, btn.url))
-            )
-          ).reply_markup,
-        });
-      } else {
-        await bot.telegram.sendMessage(userId, message, {
-          parse_mode: parseMode,
-        });
-      }
-      success++;
-    } catch {
-      fail++;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 35));
-  }
-
-  return { success, fail };
+  return _broadcastMessage(bot, userIds, message, parseMode, photoUrl, caption, inlineButtons);
 }
