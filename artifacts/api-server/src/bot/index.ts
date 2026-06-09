@@ -971,13 +971,32 @@ bot.catch((err, ctx) => {
 });
 
 export async function startBot() {
+  const launch = async (attempt = 1): Promise<void> => {
+    try {
+      const botInfo = await bot.telegram.getMe();
+      logger.info({ username: botInfo.username, attempt }, "Bot starting");
+      await bot.launch({ dropPendingUpdates: true });
+      logger.info("Bot launched successfully");
+    } catch (err: unknown) {
+      const e = err as { response?: { error_code?: number } };
+      if (e?.response?.error_code === 409 && attempt <= 5) {
+        const delay = attempt * 3000;
+        logger.warn({ attempt, delay }, "Bot conflict (409) — another instance still running, retrying...");
+        await new Promise((r) => setTimeout(r, delay));
+        return launch(attempt + 1);
+      }
+      logger.error({ err }, "Failed to launch bot");
+    }
+  };
+
+  await launch();
+}
+
+export function stopBot() {
   try {
-    const botInfo = await bot.telegram.getMe();
-    logger.info({ username: botInfo.username }, "Bot starting");
-    await bot.launch();
-    logger.info("Bot launched successfully");
-  } catch (err) {
-    logger.error({ err }, "Failed to launch bot");
+    bot.stop("SIGTERM");
+  } catch {
+    // already stopped
   }
 }
 
