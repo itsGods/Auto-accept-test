@@ -4,11 +4,7 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: >
-      corepack enable pnpm &&
-      pnpm install --frozen-lockfile &&
-      PORT=3000 BASE_PATH=/ pnpm --filter @workspace/admin-panel run build &&
-      pnpm --filter @workspace/api-server run build
+    buildCommand: sh render-build.sh
     startCommand: sh render-start.sh
     envVars:
       - key: NODE_ENV
