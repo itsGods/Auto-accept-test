@@ -13,7 +13,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function Sidebar() {
+interface SidebarProps {
+  onNavClick?: () => void;
+}
+
+export function Sidebar({ onNavClick }: SidebarProps) {
   const [location] = useLocation();
 
   const links = [
@@ -47,14 +51,15 @@ export function Sidebar() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={onNavClick}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium",
                   isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4 shrink-0" />
                 {link.label}
               </Link>
             );

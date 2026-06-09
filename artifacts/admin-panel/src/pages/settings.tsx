@@ -63,18 +63,17 @@ export default function Settings() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Settings</h1>
           <p className="text-muted-foreground mt-1">Configure your bot behavior</p>
         </div>
-        <Button onClick={handleSave} disabled={saving || isLoading}>
+        <Button onClick={handleSave} disabled={saving || isLoading} className="self-start sm:self-auto">
           <Save className="w-4 h-4 mr-1" />
           Save Settings
         </Button>
       </div>
 
-      {/* Bot Info */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Bot Information</CardTitle>
@@ -84,11 +83,11 @@ export default function Settings() {
             <Skeleton className="h-16 w-full" />
           ) : botInfo ? (
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <Bot className="w-7 h-7" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <Bot className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
               <div>
-                <div className="font-semibold text-lg">{botInfo.firstName}</div>
+                <div className="font-semibold text-base sm:text-lg">{botInfo.firstName}</div>
                 <div className="text-muted-foreground text-sm">@{botInfo.username}</div>
                 <div className="flex items-center gap-1.5 mt-1">
                   <div className={`w-2 h-2 rounded-full ${botInfo.isOnline ? "bg-green-400" : "bg-red-400"}`} />
@@ -103,7 +102,6 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Toggle Settings */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Bot Behavior</CardTitle>
@@ -112,10 +110,10 @@ export default function Settings() {
           {isLoading
             ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)
             : toggleSettings.map(({ key, label, desc }) => (
-                <div key={key} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-                  <div>
+                <div key={key} className="flex items-center justify-between gap-4 py-2 border-b border-border/50 last:border-0">
+                  <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium">{label}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{desc}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 pr-2">{desc}</div>
                   </div>
                   <Switch
                     checked={form[key as keyof typeof form] as boolean}
@@ -126,16 +124,15 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Numeric Settings */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Limits & Cooldowns</CardTitle>
+          <CardTitle className="text-base">Limits &amp; Cooldowns</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoading ? (
             <Skeleton className="h-20 w-full" />
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Cooldown (seconds)</Label>
                 <Input
@@ -159,7 +156,6 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Custom Messages */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Custom Messages</CardTitle>

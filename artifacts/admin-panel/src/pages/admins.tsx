@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetAdmins,
   useAddAdmin,
-  useUpdateAdmin,
   useRemoveAdmin,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,12 +89,12 @@ export default function Admins() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Admin Panel</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Admin Panel</h1>
           <p className="text-muted-foreground mt-1">Manage bot administrators and permissions</p>
         </div>
-        <Button onClick={() => setDialog(true)}>
+        <Button onClick={() => setDialog(true)} className="self-start sm:self-auto">
           <Plus className="w-4 h-4 mr-1" />
           Add Admin
         </Button>
@@ -119,28 +118,30 @@ export default function Admins() {
           ) : (
             <div className="space-y-3">
               {admins.map((admin) => (
-                <div key={admin.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <ShieldAlert className="w-5 h-5" />
+                <div key={admin.id} className="flex items-start justify-between gap-2 p-4 rounded-lg bg-muted/30 border border-border/50">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="w-9 h-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <ShieldAlert className="w-4 h-4" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <span className="font-medium text-sm">
                           {admin.firstName ?? "Admin"}
-                          {admin.username && <span className="text-muted-foreground ml-1">@{admin.username}</span>}
                         </span>
+                        {admin.username && (
+                          <span className="text-muted-foreground text-sm">@{admin.username}</span>
+                        )}
                         <span className={`text-xs px-2 py-0.5 rounded border capitalize ${roleColors[admin.role] ?? roleColors.moderator}`}>
                           {admin.role}
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        ID: {admin.telegramId} &bull; Added {new Date(admin.addedAt).toLocaleDateString()}
+                        ID: {admin.telegramId} &bull; <span className="hidden sm:inline">Added {new Date(admin.addedAt).toLocaleDateString()}</span>
                       </div>
-                      <div className="flex gap-2 mt-1">
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
                         {admin.canApprove && <PermBadge>Approve</PermBadge>}
                         {admin.canBroadcast && <PermBadge>Broadcast</PermBadge>}
-                        {admin.canManageAdmins && <PermBadge>Manage Admins</PermBadge>}
+                        {admin.canManageAdmins && <PermBadge>Admins</PermBadge>}
                         {admin.canManageSettings && <PermBadge>Settings</PermBadge>}
                       </div>
                     </div>
@@ -148,7 +149,7 @@ export default function Admins() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-red-400 hover:bg-red-500/10"
+                    className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10 shrink-0"
                     onClick={() => removeAdmin({ id: admin.id })}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -161,7 +162,7 @@ export default function Admins() {
       </Card>
 
       <Dialog open={dialog} onOpenChange={setDialog}>
-        <DialogContent className="bg-card border-border">
+        <DialogContent className="bg-card border-border w-[calc(100vw-2rem)] max-w-md">
           <DialogHeader><DialogTitle>Add Admin</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
@@ -211,9 +212,9 @@ export default function Admins() {
               ))}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => { setDialog(false); resetForm(); }}>Cancel</Button>
-            <Button onClick={handleAdd} disabled={adding || !form.telegramId}>Add Admin</Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={() => { setDialog(false); resetForm(); }} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleAdd} disabled={adding || !form.telegramId} className="w-full sm:w-auto">Add Admin</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -97,11 +97,11 @@ export default function Broadcasts() {
 
   const statusIcon = (status: string) => {
     switch (status) {
-      case "sent": return <CheckCircle2 className="w-4 h-4 text-green-400" />;
-      case "sending": return <Clock className="w-4 h-4 text-yellow-400 animate-spin" />;
-      case "scheduled": return <Clock className="w-4 h-4 text-blue-400" />;
-      case "failed": return <AlertCircle className="w-4 h-4 text-red-400" />;
-      default: return <Clock className="w-4 h-4 text-muted-foreground" />;
+      case "sent": return <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />;
+      case "sending": return <Clock className="w-4 h-4 text-yellow-400 animate-spin shrink-0" />;
+      case "scheduled": return <Clock className="w-4 h-4 text-blue-400 shrink-0" />;
+      case "failed": return <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />;
+      default: return <Clock className="w-4 h-4 text-muted-foreground shrink-0" />;
     }
   };
 
@@ -115,12 +115,12 @@ export default function Broadcasts() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Broadcasts</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Broadcasts</h1>
           <p className="text-muted-foreground mt-1">Send messages to all your users</p>
         </div>
-        <Button onClick={() => setCreateDialog(true)}>
+        <Button onClick={() => setCreateDialog(true)} className="self-start sm:self-auto">
           <Plus className="w-4 h-4 mr-1" />
           New Broadcast
         </Button>
@@ -143,9 +143,9 @@ export default function Broadcasts() {
             <div className="space-y-3">
               {data.items.map((b) => (
                 <div key={b.id} className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         {statusIcon(b.status ?? "draft")}
                         <span className="font-medium text-sm">{b.title}</span>
                         <span className={`text-xs px-2 py-0.5 rounded border capitalize ${statusColors[b.status ?? "draft"]}`}>
@@ -153,7 +153,7 @@ export default function Broadcasts() {
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-2">{b.messageText}</p>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
                         <span>Created {new Date(b.createdAt).toLocaleDateString()}</span>
                         {b.status === "sent" && (
                           <>
@@ -167,12 +167,12 @@ export default function Broadcasts() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1 ml-4">
+                    <div className="flex gap-1 shrink-0">
                       {(b.status === "draft" || b.status === "scheduled") && (
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-primary hover:bg-primary/10"
+                          className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
                           onClick={() => send({ id: b.id })}
                           disabled={sending}
                         >
@@ -182,7 +182,7 @@ export default function Broadcasts() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-400 hover:bg-red-500/10"
+                        className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10"
                         onClick={() => deleteBroadcast({ id: b.id })}
                         disabled={deleting}
                       >
@@ -197,9 +197,8 @@ export default function Broadcasts() {
         </CardContent>
       </Card>
 
-      {/* Create Dialog */}
       <Dialog open={createDialog} onOpenChange={setCreateDialog}>
-        <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border w-[calc(100vw-2rem)] max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader><DialogTitle>New Broadcast</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
@@ -209,7 +208,7 @@ export default function Broadcasts() {
             <div>
               <Label>Message</Label>
               <Textarea
-                placeholder="Your message (Markdown supported)&#10;&#10;Use *bold*, _italic_, `code`, [link](url)"
+                placeholder={"Your message (Markdown supported)\n\nUse *bold*, _italic_, `code`, [link](url)"}
                 value={form.messageText}
                 onChange={(e) => setForm({ ...form, messageText: e.target.value })}
                 className="mt-1 min-h-[120px] font-mono text-sm"
@@ -238,9 +237,9 @@ export default function Broadcasts() {
             )}
             <InlineButtonBuilder value={form.buttons} onChange={(buttons) => setForm({ ...form, buttons })} />
           </div>
-          <DialogFooter className="mt-2">
-            <Button variant="ghost" onClick={() => { setCreateDialog(false); resetForm(); }}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={creating || !form.title || !form.messageText}>
+          <DialogFooter className="mt-2 flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={() => { setCreateDialog(false); resetForm(); }} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleCreate} disabled={creating || !form.title || !form.messageText} className="w-full sm:w-auto">
               Create Broadcast
             </Button>
           </DialogFooter>

@@ -93,13 +93,13 @@ export default function Requests() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Join Requests</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Join Requests</h1>
           <p className="text-muted-foreground mt-1">Manage channel join requests</p>
         </div>
         {status === "pending" && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -175,47 +175,42 @@ export default function Requests() {
               {data.items.map((req) => (
                 <div
                   key={req.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors"
+                  className="flex items-start justify-between gap-2 p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div className="w-9 h-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
                       {req.user?.firstName?.[0] ?? req.user?.username?.[0] ?? "?"}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-medium text-sm truncate">
                           {req.user?.firstName ?? "Unknown"}
-                          {req.user?.username && (
-                            <span className="text-muted-foreground ml-1">@{req.user.username}</span>
-                          )}
                         </span>
+                        {req.user?.username && (
+                          <span className="text-muted-foreground text-sm truncate">@{req.user.username}</span>
+                        )}
                         {req.user?.isPremium && (
-                          <span className="text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded border border-yellow-500/30">
+                          <span className="text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded border border-yellow-500/30 shrink-0">
                             Premium
                           </span>
                         )}
                         {req.user?.isBlacklisted && (
-                          <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30">
+                          <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 shrink-0">
                             Blacklisted
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-muted-foreground">
-                          ID: {req.userId} &bull; {req.channelTitle ?? `Channel ${req.channelId}`}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          &bull; {new Date(req.requestedAt).toLocaleString()}
-                        </span>
-                        {req.autoProcessed && (
-                          <span className="text-xs text-muted-foreground">&bull; Auto</span>
-                        )}
+                      <div className="text-xs text-muted-foreground mt-0.5 space-x-1">
+                        <span>ID: {req.userId}</span>
+                        <span>&bull;</span>
+                        <span className="truncate">{req.channelTitle ?? `Channel ${req.channelId}`}</span>
+                        <span className="hidden sm:inline">&bull; {new Date(req.requestedAt).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <span className={`text-xs px-2 py-1 rounded border capitalize ${statusColors[req.status ?? "pending"]}`}>
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-2 shrink-0">
+                    <span className={`text-xs px-2 py-1 rounded border capitalize whitespace-nowrap ${statusColors[req.status ?? "pending"]}`}>
                       {req.status}
                     </span>
                     {req.status === "pending" && (
@@ -223,7 +218,7 @@ export default function Requests() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-green-400 hover:bg-green-500/10 hover:text-green-300"
+                          className="h-7 w-7 p-0 text-green-400 hover:bg-green-500/10 hover:text-green-300"
                           onClick={() => approve({ id: req.id })}
                           disabled={approving}
                         >
@@ -232,7 +227,7 @@ export default function Requests() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                          className="h-7 w-7 p-0 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                           onClick={() => openRejectDialog(req.id)}
                           disabled={rejecting}
                         >
@@ -241,7 +236,7 @@ export default function Requests() {
                       </div>
                     )}
                     {req.status === "rejected" && req.rejectionReason && (
-                      <span className="text-xs text-muted-foreground max-w-[120px] truncate">
+                      <span className="text-xs text-muted-foreground max-w-[100px] truncate hidden sm:block">
                         {req.rejectionReason}
                       </span>
                     )}
@@ -279,7 +274,6 @@ export default function Requests() {
         </CardContent>
       </Card>
 
-      {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent className="bg-card border-border">
           <DialogHeader>
@@ -304,7 +298,6 @@ export default function Requests() {
         </DialogContent>
       </Dialog>
 
-      {/* Reject All Dialog */}
       <Dialog open={rejectAllDialogOpen} onOpenChange={setRejectAllDialogOpen}>
         <DialogContent className="bg-card border-border">
           <DialogHeader>

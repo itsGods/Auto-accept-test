@@ -76,7 +76,7 @@ export default function Users() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Users</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Users</h1>
         <p className="text-muted-foreground mt-1">Manage all registered users</p>
       </div>
 
@@ -141,40 +141,43 @@ export default function Users() {
               {data.items.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors"
+                  className="flex items-start justify-between gap-2 p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div className="w-9 h-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
                       {user.firstName?.[0] ?? user.username?.[0] ?? "?"}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <span className="font-medium text-sm">
                           {user.firstName ?? "Unknown"}
-                          {user.username && <span className="text-muted-foreground ml-1">@{user.username}</span>}
                         </span>
+                        {user.username && (
+                          <span className="text-muted-foreground text-sm truncate">@{user.username}</span>
+                        )}
                         {user.isPremium && (
-                          <span className="text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded border border-yellow-500/30">
+                          <span className="text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded border border-yellow-500/30 shrink-0">
                             Premium
                           </span>
                         )}
                         {user.isBlacklisted && (
-                          <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30">
+                          <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 shrink-0">
                             Blacklisted
                           </span>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        ID: {user.telegramId} &bull; {user.requestCount} requests &bull; Joined {new Date(user.joinedAt).toLocaleDateString()}
+                        <span>ID: {user.telegramId}</span>
+                        <span className="hidden sm:inline"> &bull; {user.requestCount} requests &bull; Joined {new Date(user.joinedAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 shrink-0">
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-primary hover:bg-primary/10"
+                      className="h-8 w-8 p-0 text-primary hover:bg-primary/10"
                       onClick={() => { setDmTarget(user.id); setDmDialog(true); }}
                     >
                       <MessageSquare className="w-4 h-4" />
@@ -183,7 +186,7 @@ export default function Users() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-green-400 hover:bg-green-500/10"
+                        className="h-8 w-8 p-0 text-green-400 hover:bg-green-500/10"
                         onClick={() => unblacklist({ id: user.id })}
                         disabled={unblacklisting}
                       >
@@ -193,7 +196,7 @@ export default function Users() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-400 hover:bg-red-500/10"
+                        className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10"
                         onClick={() => { setBlacklistTarget(user.id); setBlacklistReason(""); setBlacklistDialog(true); }}
                       >
                         <Ban className="w-4 h-4" />
@@ -221,7 +224,6 @@ export default function Users() {
         </CardContent>
       </Card>
 
-      {/* Blacklist Dialog */}
       <Dialog open={blacklistDialog} onOpenChange={setBlacklistDialog}>
         <DialogContent className="bg-card border-border">
           <DialogHeader><DialogTitle>Blacklist User</DialogTitle></DialogHeader>
@@ -243,7 +245,6 @@ export default function Users() {
         </DialogContent>
       </Dialog>
 
-      {/* DM Dialog */}
       <Dialog open={dmDialog} onOpenChange={setDmDialog}>
         <DialogContent className="bg-card border-border">
           <DialogHeader><DialogTitle>Send Direct Message</DialogTitle></DialogHeader>

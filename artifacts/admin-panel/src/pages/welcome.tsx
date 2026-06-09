@@ -125,12 +125,12 @@ export default function Welcome() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Welcome Messages</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Welcome Messages</h1>
           <p className="text-muted-foreground mt-1">Sent when users type /start — supports Markdown, images, and inline buttons</p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="self-start sm:self-auto">
           <Plus className="w-4 h-4 mr-1" />
           New Template
         </Button>
@@ -151,8 +151,8 @@ export default function Welcome() {
           {messages.map((msg) => (
             <Card key={msg.id} className={`bg-card border-border ${msg.isActive ? "border-primary/50" : ""}`}>
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base flex flex-wrap items-center gap-2">
                     {msg.name}
                     {msg.isActive && (
                       <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded border border-primary/30">
@@ -160,19 +160,19 @@ export default function Welcome() {
                       </span>
                     )}
                   </CardTitle>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 shrink-0">
                     <Button
                       size="sm"
                       variant="ghost"
-                      className={msg.isActive ? "text-yellow-400" : "text-muted-foreground hover:text-yellow-400"}
+                      className={`h-8 w-8 p-0 ${msg.isActive ? "text-yellow-400" : "text-muted-foreground hover:text-yellow-400"}`}
                       onClick={() => activate({ id: msg.id })}
                     >
                       {msg.isActive ? <Star className="w-4 h-4" /> : <StarOff className="w-4 h-4" />}
                     </Button>
-                    <Button size="sm" variant="ghost" className="text-primary hover:bg-primary/10" onClick={() => openEdit(msg as WelcomeMsg)}>
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-primary hover:bg-primary/10" onClick={() => openEdit(msg as WelcomeMsg)}>
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-500/10" onClick={() => remove({ id: msg.id })}>
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10" onClick={() => remove({ id: msg.id })}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -180,7 +180,7 @@ export default function Welcome() {
               </CardHeader>
               <CardContent>
                 <div className="bg-muted/30 rounded p-3 border border-border/50">
-                  <pre className="text-sm text-foreground whitespace-pre-wrap font-mono">{msg.messageText}</pre>
+                  <pre className="text-sm text-foreground whitespace-pre-wrap font-mono break-words">{msg.messageText}</pre>
                 </div>
                 <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
                   <span>Mode: {msg.parseMode}</span>
@@ -194,7 +194,7 @@ export default function Welcome() {
                 {msg.hasInlineButtons && msg.inlineButtons && (
                   <div className="mt-2 space-y-1">
                     {(msg.inlineButtons as InlineButtonGrid).map((row: { text: string; url: string }[], i: number) => (
-                      <div key={i} className="flex gap-1">
+                      <div key={i} className="flex flex-wrap gap-1">
                         {row.map((btn, j: number) => (
                           <div key={j} className="text-xs bg-primary/10 text-primary border border-primary/20 rounded px-2 py-1">
                             {btn.text}
@@ -211,7 +211,7 @@ export default function Welcome() {
       )}
 
       <Dialog open={dialog} onOpenChange={closeDialog}>
-        <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border w-[calc(100vw-2rem)] max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editTarget ? "Edit Welcome Message" : "New Welcome Message"}</DialogTitle>
           </DialogHeader>
@@ -223,7 +223,7 @@ export default function Welcome() {
             <div>
               <Label>Message Text</Label>
               <Textarea
-                placeholder="Welcome message text...&#10;&#10;Use *bold*, _italic_, `code`, [link](url)"
+                placeholder={"Welcome message text...\n\nUse *bold*, _italic_, `code`, [link](url)"}
                 value={form.messageText}
                 onChange={(e) => setForm({ ...form, messageText: e.target.value })}
                 className="mt-1 min-h-[140px] font-mono text-sm"
@@ -246,9 +246,9 @@ export default function Welcome() {
             </div>
             <InlineButtonBuilder value={form.buttons} onChange={(buttons) => setForm({ ...form, buttons })} />
           </div>
-          <DialogFooter className="mt-2">
-            <Button variant="ghost" onClick={closeDialog}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={creating || updating || !form.name || !form.messageText}>
+          <DialogFooter className="mt-2 flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={closeDialog} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleSubmit} disabled={creating || updating || !form.name || !form.messageText} className="w-full sm:w-auto">
               {editTarget ? "Update" : "Create"}
             </Button>
           </DialogFooter>

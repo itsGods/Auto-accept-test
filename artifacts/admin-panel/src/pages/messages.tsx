@@ -141,13 +141,11 @@ function ApprovalMessages() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            Sent to users via DM when their request is <span className="text-green-400 font-medium">approved</span>. Supports Markdown, images, and inline buttons.
-          </p>
-        </div>
-        <Button size="sm" onClick={openCreate}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          Sent to users via DM when their request is <span className="text-green-400 font-medium">approved</span>. Supports Markdown, images, and inline buttons.
+        </p>
+        <Button size="sm" onClick={openCreate} className="self-start sm:self-auto shrink-0">
           <Plus className="w-4 h-4 mr-1" />
           New Template
         </Button>
@@ -220,7 +218,7 @@ function ApprovalMessages() {
       )}
 
       <Dialog open={dialog} onOpenChange={closeDialog}>
-        <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border w-[calc(100vw-2rem)] max-w-lg max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editTarget ? "Edit Approval Message" : "New Approval Message"}</DialogTitle>
           </DialogHeader>
@@ -329,11 +327,11 @@ function RejectionMessages() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           Sent to users via DM when their request is <span className="text-red-400 font-medium">rejected</span>.
         </p>
-        <Button size="sm" onClick={openCreate}>
+        <Button size="sm" onClick={openCreate} className="self-start sm:self-auto shrink-0">
           <Plus className="w-4 h-4 mr-1" />
           New Template
         </Button>
@@ -385,7 +383,7 @@ function RejectionMessages() {
       )}
 
       <Dialog open={dialog} onOpenChange={closeDialog}>
-        <DialogContent className="bg-card border-border max-w-lg">
+        <DialogContent className="bg-card border-border w-[calc(100vw-2rem)] max-w-lg">
           <DialogHeader>
             <DialogTitle>{editTarget ? "Edit Rejection Message" : "New Rejection Message"}</DialogTitle>
           </DialogHeader>
@@ -433,7 +431,7 @@ export default function Messages() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Response Messages</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Response Messages</h1>
         <p className="text-muted-foreground mt-1">
           Customize the DMs sent to users after their request is approved or rejected
         </p>

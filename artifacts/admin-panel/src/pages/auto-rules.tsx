@@ -118,12 +118,12 @@ export default function AutoRules() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Auto Rules</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Auto Rules</h1>
           <p className="text-muted-foreground mt-1">Automatically approve or reject requests based on rules</p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="self-start sm:self-auto">
           <Plus className="w-4 h-4 mr-1" />
           Add Rule
         </Button>
@@ -149,41 +149,40 @@ export default function AutoRules() {
               {rules.map((rule) => (
                 <div
                   key={rule.id}
-                  className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                  className={`flex items-start justify-between gap-2 p-4 rounded-lg border transition-colors ${
                     rule.isActive
                       ? "bg-muted/30 border-border/50 hover:border-border"
                       : "bg-muted/10 border-border/20 opacity-60"
                   }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-full ${rule.action === "approve" ? "bg-green-500/10" : "bg-red-500/10"}`}>
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className={`shrink-0 p-2 rounded-full ${rule.action === "approve" ? "bg-green-500/10" : "bg-red-500/10"}`}>
                       {rule.action === "approve"
                         ? <CheckCircle2 className="w-4 h-4 text-green-400" />
                         : <XCircle className="w-4 h-4 text-red-400" />}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium text-sm">{rule.name}</span>
                         {!rule.isActive && <span className="text-xs text-muted-foreground">(disabled)</span>}
                       </div>
-                      <div className="flex gap-2 mt-0.5 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1 text-xs text-muted-foreground">
                         <span>Type: {rule.ruleType}</span>
-                        <span>&bull;</span>
+                        <span className="hidden sm:inline">&bull;</span>
                         <span>Pattern: <code className="bg-muted px-1 rounded">{rule.pattern}</code></span>
-                        <span>&bull;</span>
+                        <span className="hidden sm:inline">&bull;</span>
                         <span className={rule.action === "approve" ? "text-green-400" : "text-red-400"}>
-                          Action: {rule.action}
+                          {rule.action}
                         </span>
-                        <span>&bull;</span>
-                        <span>Priority: {rule.priority ?? 0}</span>
+                        <span className="hidden sm:inline">&bull; Priority: {rule.priority ?? 0}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="text-primary hover:bg-primary/10" onClick={() => openEdit(rule)}>
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-primary hover:bg-primary/10" onClick={() => openEdit(rule)}>
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-500/10" onClick={() => remove({ id: rule.id })}>
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10" onClick={() => remove({ id: rule.id })}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -195,7 +194,7 @@ export default function AutoRules() {
       </Card>
 
       <Dialog open={dialog} onOpenChange={closeDialog}>
-        <DialogContent className="bg-card border-border">
+        <DialogContent className="bg-card border-border w-[calc(100vw-2rem)] max-w-md">
           <DialogHeader>
             <DialogTitle>{editTarget ? "Edit Rule" : "New Auto Rule"}</DialogTitle>
           </DialogHeader>
@@ -259,9 +258,9 @@ export default function AutoRules() {
               <Switch checked={form.isActive} onCheckedChange={(v) => setForm({ ...form, isActive: v })} />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={closeDialog}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={creating || updating || !form.name || !form.pattern}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={closeDialog} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleSubmit} disabled={creating || updating || !form.name || !form.pattern} className="w-full sm:w-auto">
               {editTarget ? "Update" : "Create"}
             </Button>
           </DialogFooter>
