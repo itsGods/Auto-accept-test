@@ -1,0 +1,67 @@
+M
+My Workspace
+
+
+t
+true-request-acceptor
+
+Web Service
+true-request-acceptor
+Node
+Free
+Upgrade your instance
+Blueprint managed
+
+Connect
+
+Manual Deploy
+Service ID:
+srv-d8k6f0pkh4rs73b8js9g
+
+itsGods / Auto-accept-test
+main
+https://true-request-acceptor.onrender.com
+
+Your free instance will spin down with inactivity, which can delay requests by 50 seconds or more.
+Upgrade now
+June 10, 2026 at 12:50 AM
+failed
+3738c1b
+Adapt application for production deployment on Render Configure the application for production deployment by serving static admin panel files, implementing default environment variables in Vite, creating a render.yaml blueprint for automated deployment, and establishing a render-start.sh script to manage database migrations and server startup. Replit-Commit-Author: Agent Replit-Commit-Session-Id: 2aedeeda-2ece-4ff4-9ab6-dcf4ce9bd9e4 Replit-Commit-Checkpoint-Type: full_checkpoint Replit-Commit-Event-Id: 8afd5bf4-50c3-48dc-9a99-b342512294de Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/b97a5e1e-cc07-4b62-be71-10e7a2ed9c7f/2aedeeda-2ece-4ff4-9ab6-dcf4ce9bd9e4/1Vli9jD Replit-Helium-Checkpoint-Created: true
+
+Rollback
+Exited with status 226 while building your code.
+Read our docs for common ways to troubleshoot your deploy.
+
+All logs
+Search
+Search
+
+Jun 10, 12:49 AM - 12:51 AM
+GMT+5:30
+
+
+
+==> Cloning from https://github.com/itsGods/Auto-accept-test
+==> Checking out commit 3738c1ba661f5f7517380e749e55f38d7d9e5780 in branch main
+==> Using Node.js version 24.14.1 (default)
+==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+==> Running build command 'npm install -g pnpm && pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/admin-panel run build && pnpm --filter @workspace/api-server run build
+'...
+npm error code EROFS
+npm error syscall rename
+npm error path /usr/lib/node_modules/pnpm
+npm error dest /usr/lib/node_modules/.pnpm-H0EZVZtB
+npm error errno -30
+npm error rofs EROFS: read-only file system, rename '/usr/lib/node_modules/pnpm' -> '/usr/lib/node_modules/.pnpm-H0EZVZtB'
+npm error rofs Often virtualized file systems, or other file systems
+npm error rofs that don't support symlinks, give this error.
+npm error A complete log of this run can be found in: /opt/render/.cache/_logs/2026-06-09T19_20_46_320Z-debug-0.log
+==> Build failed 😞
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+Need better ways to work with logs? Try theRender CLI, Render MCP Server, or set up a log stream integration 
+
+0 services selected:
+
+Move
+
