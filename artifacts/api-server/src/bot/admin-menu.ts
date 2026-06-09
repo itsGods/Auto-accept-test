@@ -57,6 +57,8 @@ async function upsertSetting(key: string, value: string) {
 }
 
 async function isAdmin(telegramId: number): Promise<boolean> {
+  const envIds = (process.env.ADMIN_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (envIds.includes(String(telegramId))) return true;
   const r = await db.select().from(adminUsersTable).where(eq(adminUsersTable.telegramId, telegramId)).limit(1);
   return r.length > 0;
 }

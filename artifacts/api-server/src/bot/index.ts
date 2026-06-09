@@ -68,6 +68,10 @@ async function getActiveRejectionMessage() {
 }
 
 async function isAdmin(telegramId: number): Promise<boolean> {
+  // Check ADMIN_IDS env var first (comma-separated, always grants access)
+  const envIds = (process.env.ADMIN_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (envIds.includes(String(telegramId))) return true;
+
   const admin = await db
     .select()
     .from(adminUsersTable)
@@ -767,6 +771,49 @@ bot.command("deeplink", async (ctx) => {
   );
 });
 
+// ─── /setup command (bootstrap — works only when no admins exist) ──────────────
+
+bot.command("setup", async (ctx) => {
+  const userId = ctx.from?.id;
+  if (!userId) return;
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(adminUsersTable);
+
+  if (Number(count) > 0) {
+    // Already has admins — only existing admins can run this
+    if (!(await isAdmin(userId))) {
+      await ctx.reply(
+        "⛔ Admin setup is already complete.\n\nAsk an existing admin to run `/addadmin " + userId + "` to grant you access.",
+        { parse_mode: "Markdown" }
+      );
+      return;
+    }
+    await ctx.reply("✅ You are already an admin. Use /menu to open the control panel.");
+    return;
+  }
+
+  // No admins yet — make the first person who runs this the superadmin
+  await db.insert(adminUsersTable).values({
+    telegramId: userId,
+    username: ctx.from.username,
+    firstName: ctx.from.first_name,
+    role: "admin",
+    canApprove: true,
+    canBroadcast: true,
+    canManageAdmins: true,
+    canManageSettings: true,
+  }).onConflictDoNothing();
+
+  await ctx.reply(
+    `🎉 *Setup complete!*\n\nYou are now the bot administrator.\n\n` +
+    `Use /menu to open the inline control panel, or /help to see all commands.\n\n` +
+    `To add more admins, use \`/addadmin [telegram_id]\``,
+    { parse_mode: "Markdown" }
+  );
+});
+
 // ─── /addadmin command ─────────────────────────────────────────────────────────
 
 bot.command("addadmin", async (ctx) => {
@@ -906,39 +953,52 @@ bot.on("chat_join_request", async (ctx) => {
       return;
     }
 
-    // Save pending request
-    await db.insert(joinRequestsTable).values({
+    // Save pending request — get the ID back for inline buttons
+    const [inserted] = await db.insert(joinRequestsTable).values({
       userId: user.id,
       channelId: req.chat.id,
       channelTitle: req.chat.title,
       channelUsername:
         "username" in req.chat ? req.chat.username : undefined,
       status: "pending",
-    });
+    }).returning();
 
     await db
       .update(usersTable)
       .set({ requestCount: sql`${usersTable.requestCount} + 1` })
       .where(eq(usersTable.telegramId, user.id));
 
-    // Notify admins
+    // Notify admins with inline approve/reject buttons
     const notifyAdmin = await getSetting("notify_admin_on_request", "true");
     if (notifyAdmin === "true") {
       const admins = await db.select().from(adminUsersTable);
-      const displayName =
-        user.first_name + (user.last_name ? ` ${user.last_name}` : "");
+      // Also include ADMIN_IDS env var recipients that may not be in DB
+      const envAdminIds = (process.env.ADMIN_IDS ?? "")
+        .split(",").map((s) => parseInt(s.trim())).filter((n) => !isNaN(n));
+      const dbAdminIds = new Set(admins.map((a) => a.telegramId));
+      const allAdminIds = [...dbAdminIds, ...envAdminIds.filter((id) => !dbAdminIds.has(id))];
+
+      const displayName = user.first_name + (user.last_name ? ` ${user.last_name}` : "");
       const notification =
         `📨 *New Join Request*\n\n` +
-        `User: [${displayName}](tg://user?id=${user.id})\n` +
-        `Username: ${user.username ? `@${user.username}` : "N/A"}\n` +
-        `Channel: ${req.chat.title}\n` +
-        `User ID: \`${user.id}\`\n\n` +
-        `Use /approve ${user.id} or /reject ${user.id}`;
+        `👤 User: [${displayName}](tg://user?id=${user.id})\n` +
+        `🔗 Username: ${user.username ? `@${user.username}` : "N/A"}\n` +
+        `📢 Channel: ${req.chat.title}\n` +
+        `🆔 User ID: \`${user.id}\``;
 
-      for (const admin of admins) {
+      const keyboard = inserted ? Markup.inlineKeyboard([
+        [
+          Markup.button.callback("✅ Approve", `m:apr:${inserted.id}`),
+          Markup.button.callback("❌ Reject", `m:rej:${inserted.id}`),
+          Markup.button.callback("💬 Reject w/ Reason", `m:rejask:${inserted.id}`),
+        ],
+      ]) : undefined;
+
+      for (const adminId of allAdminIds) {
         try {
-          await bot.telegram.sendMessage(admin.telegramId, notification, {
+          await bot.telegram.sendMessage(adminId, notification, {
             parse_mode: "Markdown",
+            ...(keyboard ?? {}),
           });
         } catch {}
       }
@@ -947,6 +1007,10 @@ bot.on("chat_join_request", async (ctx) => {
     logger.error({ err }, "Error handling chat_join_request");
   }
 });
+
+// ─── Inline admin menu (registered before fallback text handler) ───────────────
+
+registerAdminMenu(bot);
 
 // ─── Message handler for unknown messages ──────────────────────────────────────
 
@@ -960,10 +1024,7 @@ bot.on(message("text"), async (ctx) => {
     return;
   }
 
-  await ctx.reply(
-    "Use /help to see available commands.",
-    { parse_mode: "Markdown" }
-  );
+  await ctx.reply("Use /help to see available commands.", { parse_mode: "Markdown" });
 });
 
 // ─── Error handler ─────────────────────────────────────────────────────────────
@@ -1001,9 +1062,6 @@ export function stopBot() {
     // already stopped
   }
 }
-
-// Register inline admin menu (must be before bot.launch)
-registerAdminMenu(bot);
 
 export async function broadcastMessage(
   userIds: number[],
